@@ -1,17 +1,24 @@
 [project]
-name = "project-name"
+name = "jaxonfunctions"
 version = "0.1.0"
-description = "your description"
+description = "Functions for JAX"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
-authors = [{ name = "Your Name", email = "Your@email.com" }]
+authors = [{ name = "Artur A. Galstyan", email = "mail@arturgalstyan.dev" }]
 dependencies = [
     "beartype",
     "typing_extensions",
+    "jaxtyping",
+    "jax",
+    "jaxlib",
+    "numpy"
 ]
 [project.optional-dependencies]
 dev = ["pre-commit", "pytest", "mkdocs"]
+
+[tool.pytest.ini_options]
+addopts = "--jaxtyping-packages=jaxonfunctions,beartype.beartype"
 
 [tool.ruff]
 extend-include = ["*.ipynb"]
@@ -30,7 +37,7 @@ lines-after-imports = 2
 order-by-type = false
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["jaxonfunctions", "tests"]
 
 
 [build-system]
