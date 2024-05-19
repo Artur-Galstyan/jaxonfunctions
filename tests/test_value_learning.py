@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from jaxonfunctions.rl.value_learning import q_learning, sarsa
+from jaxrl.value_learning import q_learning, sarsa
 
 
 def test_sarsa():

@@ -1,7 +1,7 @@
 [project]
-name = "jaxonfunctions"
+name = "jaxrl"
 version = "0.1.0"
-description = "Functions for JAX"
+description = "Functions for RL in JAX"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -18,7 +18,7 @@ dependencies = [
 dev = ["pre-commit", "pytest", "mkdocs"]
 
 [tool.pytest.ini_options]
-addopts = "--jaxtyping-packages=jaxonfunctions,beartype.beartype"
+addopts = "--jaxtyping-packages=jaxrl,beartype.beartype"
 
 [tool.ruff]
 extend-include = ["*.ipynb"]
@@ -37,7 +37,7 @@ lines-after-imports = 2
 order-by-type = false
 
 [tool.pyright]
-include = ["jaxonfunctions", "tests"]
+include = ["jaxrl", "tests"]
 
 
 [build-system]

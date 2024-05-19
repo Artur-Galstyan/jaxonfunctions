@@ -67,3 +67,16 @@ def q_learning(
     )
 
     return target_tm1 - q_tm1[a_tm1]
+
+
+def generalized_advantage_estimate(
+    gamma: Float[Array, ""] | float,
+    lmbda: Float[Array, ""] | float,
+    rewards: Float[Array, " n_steps"],
+    old_state_values: Float[Array, " n_steps"],
+    new_state_values: Float[Array, " n_steps"],
+    dones: Int[Array, " n_steps"],
+    terminated: Int[Array, " n_steps"],
+    stop_target_gradients: bool = False,
+) -> tuple[Float[Array, " n_steps"], Float[Array, " n_steps"]]:
+    return old_state_values, new_state_values
