@@ -1,5 +1,6 @@
 import jax
 import jax.numpy as jnp
+from beartype.typing import Optional
 from jaxtyping import Array, Float, Int
 
 
@@ -76,7 +77,22 @@ def generalized_advantage_estimate(
     old_state_values: Float[Array, " n_steps"],
     new_state_values: Float[Array, " n_steps"],
     dones: Int[Array, " n_steps"],
-    terminated: Int[Array, " n_steps"],
+    terminated: Optional[Int[Array, " n_steps"]] = None,
     stop_target_gradients: bool = False,
-) -> tuple[Float[Array, " n_steps"], Float[Array, " n_steps"]]:
-    return old_state_values, new_state_values
+):
+    if not terminated:
+        terminated = dones
+    deltas = (
+        rewards + ((gamma * (1 - terminated)) * new_state_values) - old_state_values
+    )
+    discounts = gamma * lmbda * (1 - dones)
+
+    def body(carry, x):
+        delta, discount = x
+        carry = delta + discount * carry
+        return carry, carry
+
+    _, advantage = jax.lax.scan(body, 0.0, xs=(deltas, discounts), reverse=True)
+    value_target = advantage + old_state_values
+
+    return advantage, value_target
