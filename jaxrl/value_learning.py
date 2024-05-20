@@ -11,7 +11,7 @@ def sarsa(
     discount_t: Float[Array, ""] | float,
     q_t: Float[Array, " n_actions"],
     a_t: Int[Array, ""] | int,
-    stop_target_gradients: bool = False,
+    stop_target_gradients: bool = True,
 ) -> Float[Array, ""]:
     """Calculates the SARSA temporal difference error.
 
@@ -43,7 +43,7 @@ def q_learning(
     r_t: Float[Array, ""] | float,
     discount_t: Float[Array, ""] | float,
     q_t: Float[Array, " n_actions"],
-    stop_target_gradients: bool = False,
+    stop_target_gradients: bool = True,
 ):
     """Calculates the Q-learning temporal difference error.
 
@@ -74,25 +74,41 @@ def generalized_advantage_estimate(
     gamma: Float[Array, ""] | float,
     lmbda: Float[Array, ""] | float,
     rewards: Float[Array, " n_steps"],
-    old_state_values: Float[Array, " n_steps"],
-    new_state_values: Float[Array, " n_steps"],
-    dones: Int[Array, " n_steps"],
-    terminated: Optional[Int[Array, " n_steps"]] = None,
-    stop_target_gradients: bool = False,
+    values: Float[Array, " n_steps"],
+    bootstrap_value: Float[Array, ""],
+    terminated: Int[Array, " n_steps"],
+    truncated: Optional[Int[Array, " n_steps"]] = None,
+    stop_target_gradients: bool = True,
 ):
-    if not terminated:
-        terminated = dones
-    deltas = (
-        rewards + ((gamma * (1 - terminated)) * new_state_values) - old_state_values
+    if truncated is None:
+        truncated = terminated
+    truncation_mask = 1 - truncated
+    values_t_plus_1 = jnp.concatenate(
+        [values[1:], jnp.expand_dims(bootstrap_value, 0)], axis=0
     )
-    discounts = gamma * lmbda * (1 - dones)
+
+    deltas = (
+        rewards + (gamma * (1 - terminated)) * values_t_plus_1 - values
+    ) * truncation_mask
+    discounts = gamma * lmbda * truncation_mask
 
     def body(carry, x):
         delta, discount = x
         carry = delta + discount * carry
         return carry, carry
 
-    _, advantage = jax.lax.scan(body, 0.0, xs=(deltas, discounts), reverse=True)
-    value_target = advantage + old_state_values
+    _, vs_minus_v_xs = jax.lax.scan(body, 0.0, xs=(deltas, discounts), reverse=True)
+    value_target = vs_minus_v_xs + values
 
-    return advantage, value_target
+    vs_t_plus_1 = jnp.concatenate(
+        [value_target[1:], jnp.expand_dims(bootstrap_value, 0)], axis=0
+    )
+
+    advantage = (
+        rewards + (gamma * (1 - terminated)) * vs_t_plus_1 - values
+    ) * truncation_mask
+
+    if stop_target_gradients:
+        return jax.lax.stop_gradient(advantage), jax.lax.stop_gradient(value_target)
+    else:
+        return advantage, value_target
